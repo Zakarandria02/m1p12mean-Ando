@@ -5,6 +5,8 @@ const cors = require("cors");
 const userRoutes = require("../routes/userRoutes");
 const autoRoutes = require("../routes/autoRoutes");
 const authRoutes = require("../routes/authRoutes");
+const piecesRoutes = require("../routes/piecesRoutes");
+const pieceClientRoutes = require("../routes/pieceClientRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +29,9 @@ mongoose
 app.use("/api/users", userRoutes);
 app.use("/api/autos", autoRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/pieces", piecesRoutes);
+app.use("/api/pieceClient", pieceClientRoutes);
+app.use(express.json()); // Permet d'analyser le JSON dans les requêtes
 
 // Route pour la racine
 app.get("/", (req, res) => {

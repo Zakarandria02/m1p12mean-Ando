@@ -1,6 +1,27 @@
 const Auto = require("../models/auto");
-// Créer un utilisateur
+
 exports.createAuto = async (req, res) => {
+  try {
+    const { marque, modele, annee, user } = req.body;
+
+    if (!marque || !modele || !annee) {
+      return res.status(400).json({ message: "Tous les champs sont requis !" });
+    }
+
+    const newAuto = new Auto({
+      marque,
+      modele,
+      annee,
+      user,
+    });
+
+    await newAuto.save();
+    res.status(201).json(newAuto);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};
+/*exports.createAuto = async (req, res) => {
   try {
     const auto = new Auto(req.body);
     await auto.save();
@@ -8,9 +29,8 @@ exports.createAuto = async (req, res) => {
   } catch (error) {
     res.status(400).send(error);
   }
-};
+};*/
 
-// Lire tous les utilisateurs
 exports.getAllAutos = async (req, res) => {
   try {
     const autos = await Auto.find();
@@ -20,7 +40,6 @@ exports.getAllAutos = async (req, res) => {
   }
 };
 
-// Lire un utilisateur par ID
 exports.getAutoById = async (req, res) => {
   try {
     const auto = await Auto.findById(req.params.id);
@@ -33,7 +52,6 @@ exports.getAutoById = async (req, res) => {
   }
 };
 
-// Mettre à jour un utilisateur par ID
 exports.updateAuto = async (req, res) => {
   try {
     const auto = await Auto.findByIdAndUpdate(req.params.id, req.body, {
