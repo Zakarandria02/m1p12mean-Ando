@@ -7,7 +7,7 @@ const { sendActivationEmail } = require("../utils/emailService");
 // Inscription
 exports.register = async (req, res) => {
   try {
-    const { nom, prenom, email, password, profile } = req.body;
+    const { nom, prenom, password, email, phone, profile } = req.body;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
@@ -19,15 +19,16 @@ exports.register = async (req, res) => {
     const user = new User({
       nom,
       prenom,
-      email,
       password,
-      profile,
+      email,
+      phone,
+      /*profile,
       isAdmin: profile === "Manager", // Manager est admin
-      isActivated: profile !== "Mécanicien", // Désactiver le compte Mécanicien par défaut
+      isActivated: profile !== "Mécanicien",*/ // Désactiver le compte Mécanicien par défaut
     });
 
     // Générer un token d'activation pour les Mécaniciens
-    if (profile === "Mécanicien") {
+    if (profile === "Client") {
       user.activationToken = jwt.sign(
         { email },
         process.env.JWT_SECRET || "votre_clé_secrète",
@@ -37,7 +38,6 @@ exports.register = async (req, res) => {
       // Trouver l'ADMIN Manager pour lui envoyer un email
       const adminManager = await User.findOne({
         profile: "Manager",
-        isAdmin: true,
       });
       if (adminManager) {
         await sendActivationEmail(adminManager.email, user.activationToken); // Envoyer l'email d'activation

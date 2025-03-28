@@ -2,18 +2,16 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const UserSchema = new mongoose.Schema({
-  nom: { type: String },
+  nom: { type: String, required: true },
   prenom: { type: String },
-  password: { type: String, required: true },
-  email: { type: String, unique: true, sparse: true },
-  profile: {
+  password: { type: String },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: true },
+  role: {
     type: String,
-    enum: ["Client", "Mécanicien", "Manager"],
-    required: true,
+    enum: ["client", "mechanic", "admin"],
+    default: "client",
   },
-  isAdmin: { type: Boolean, default: false },
-  isActivated: { type: Boolean, default: false }, // Compte désactivé par défaut
-  activationToken: { type: String }, // Token pour l'activation par email
 });
 
 // Hacher le mot de passe avant de sauvegarder l'utilisateur

@@ -2,7 +2,7 @@ const Auto = require("../models/auto");
 
 exports.createAuto = async (req, res) => {
   try {
-    const { marque, modele, annee, user } = req.body;
+    const { marque, modele, annee } = req.body;
 
     if (!marque || !modele || !annee) {
       return res.status(400).json({ message: "Tous les champs sont requis !" });
