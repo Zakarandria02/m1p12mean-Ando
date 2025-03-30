@@ -28,7 +28,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["En Attente", "En cours", "Terminé"],
+    enum: ["En Attente", "En Cours", "Terminé"],
     default: "En Attente",
   },
 });

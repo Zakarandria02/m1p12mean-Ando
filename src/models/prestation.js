@@ -1,19 +1,24 @@
 const mongoose = require("mongoose");
-// const User = require("./user");
 
 const prestationSchema = new mongoose.Schema({
   nom: {
     type: String,
     required: true,
-    unique: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    trim: true,
   },
   prix: {
     type: Number,
     required: true,
   },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Prestation = mongoose.model("Prestation", prestationSchema);
-
 module.exports = Prestation;
