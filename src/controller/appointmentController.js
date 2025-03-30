@@ -148,7 +148,7 @@ const Appointment = require("../models/appointment");
 };*/
 
 /*Vrai 1er cas*/
-exports.createAppointment = async (req, res) => {
+/*exports.createAppointment = async (req, res) => {
   try {
     const {
       nom,
@@ -248,7 +248,7 @@ exports.createAppointment = async (req, res) => {
     console.error("[ERROR]", error);
     res.status(500).json({ message: "Une erreur interne est survenue." });
   }
-};
+};*/
 
 /*exports.createAppointment = async (req, res) => {
   try {
@@ -284,11 +284,9 @@ exports.createAppointment = async (req, res) => {
         !prestationId ||
         !date
       ) {
-        return res
-          .status(400)
-          .json({
-            message: "Veuillez fournir toutes les informations requises.",
-          });
+        return res.status(400).json({
+          message: "Veuillez fournir toutes les informations requises.",
+        });
       }
 
       // Création d'un nouvel utilisateur
@@ -362,7 +360,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user"); // Assurez-vous que ces chemins sont corrects
 const Auto = require("../models/auto");
 const Prestation = require("../models/prestation");
-const Appointment = require("../models/appointment");
+const Appointment = require("../models/appointment");*/
 
 exports.createAppointment = async (req, res) => {
   try {
@@ -474,4 +472,4 @@ exports.createAppointment = async (req, res) => {
     console.error("[ERROR]", error);
     res.status(500).json({ message: "Une erreur interne est survenue." });
   }
-};*/
+};

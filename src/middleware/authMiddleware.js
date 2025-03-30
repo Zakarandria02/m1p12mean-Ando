@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-exports.verifyToken = (req, res, next) => {
+/*exports.verifyToken = (req, res, next) => {
   console.log("Headers Authorization:", req.headers.authorization); // Vérifier le token reçu
 
   const token = req.headers["authorization"]?.split(" ")[1]; // Extraction du token
@@ -21,7 +21,7 @@ exports.verifyToken = (req, res, next) => {
     console.log("Utilisateur authentifié avec userId:", req.userId);
     next();
   });
-};
+};*/
 
 /*exports.verifyToken = (req, res, next) => {
   const token = req.headers["authorization"]?.split(" ")[1]; // Extraction du token
@@ -67,7 +67,7 @@ exports.verifyToken = (req, res, next) => {
   });
 };*/
 
-/*exports.verifyToken = (req, res, next) => {
+exports.verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
 
   if (!token) {
@@ -85,7 +85,7 @@ exports.verifyToken = (req, res, next) => {
     req.isAdmin = decoded.isAdmin;
     next();
   });
-};*/
+};
 
 /*const jwt = require("jsonwebtoken");
 

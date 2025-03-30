@@ -9,6 +9,7 @@ router.get("/details", tacheMecanoController.getAllDetails);
 router.get("/:id", tacheMecanoController.getTacheMecanoById);
 //router.put("/:id", tacheMecanoController.updateTacheMecano);
 router.put("/:id", tacheMecanoController.updateStatut);
+//router.put("/:id", tacheMecanoController.updateTacheMecano);
 router.delete("/:id", tacheMecanoController.deleteTacheMecano);
 
 module.exports = router;

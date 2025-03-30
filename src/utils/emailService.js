@@ -20,3 +20,12 @@ exports.sendActivationEmail = async (email, activationToken) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+/**
+ *     console.log("🔍 Tâche trouvée :", tacheMecano);
+ *     console.log("📅 ID de l'appointment lié :", tacheMecano.appointment);
+
+ *     console.log("✅ Appointment après mise à jour :", updatedAppointment);
+       console.log("💳 Portefeuille avant mise à jour :", wallet);
+       console.error("❌ Erreur lors de la mise à jour :", error);
+ */
