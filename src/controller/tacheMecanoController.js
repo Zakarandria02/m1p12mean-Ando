@@ -1,40 +1,21 @@
 const TacheMecano = require("../models/tacheMecano");
-
 const Appointment = require("../models/appointment");
-
 const Wallet = require("../models/portefeuille");
+const User = require("../models/user");
 
 exports.updateStatut = async (req, res) => {
   try {
     const { statut } = req.body;
-    const { id } = req.params; // ID de la tâche mécano
-
-    // Vérifier si la tâche mécano existe
-    const tacheMecano = await TacheMecano.findById(id);
-    if (!tacheMecano) {
-      return res.status(404).json({ error: "Tâche mécano non trouvée." });
-    }
-
-    if (!tacheMecano.appointment) {
-      return res
-        .status(400)
-        .json({ error: "Aucun rendez-vous lié à cette tâche." });
-    }
-    // Mettre à jour la tâche mécano
-    const updatedTacheMecano = await TacheMecano.findByIdAndUpdate(
-      id,
-      { statut },
-      { new: true, runValidators: true }
-    );
+    const { id } = req.params;
 
     // Mettre à jour le statut de l'appointment
     const updatedAppointment = await Appointment.findByIdAndUpdate(
-      tacheMecano.appointment,
+      id,
       { status: statut }, // Correction du champ `status`
       { new: true, runValidators: true }
     )
       .populate("prestation")
-      .populate("user"); // Peuple `prestation` et `user`
+      .populate("user");
 
     if (!updatedAppointment) {
       return res.status(404).json({ error: "Rendez-vous non trouvé." });
@@ -42,8 +23,7 @@ exports.updateStatut = async (req, res) => {
 
     /********* CONDITION DE PAIEMENT *************/
 
-    if (statut === "Terminé") {
-      // Vérifier que la prestation est bien renseignée
+    if (statut === "En Cours") {
       if (
         !updatedAppointment.prestation ||
         !updatedAppointment.prestation.prix
@@ -86,7 +66,6 @@ exports.updateStatut = async (req, res) => {
     }
 
     res.status(200).json({
-      tacheMecano: updatedTacheMecano,
       appointment: updatedAppointment,
     });
   } catch (error) {
@@ -95,106 +74,44 @@ exports.updateStatut = async (req, res) => {
   }
 };
 
-/*exports.updateStatut = async (req, res) => {
+/*Fonction getTacheMecanoById prend les liste des taches mecano par id mecanicien */
+
+exports.getTacheMecanoById = async (req, res) => {
   try {
-    const { statut } = req.body;
-    const { id } = req.params; // ID de la tâche mécano
+    const { id } = req.params; // ID de l'utilisateur (mécanicien)
 
-    // Vérifier si la tâche mécano existe
-    const tacheMecano = await TacheMecano.findById(id);
-    if (!tacheMecano) {
-      return res.status(404).json({ error: "Tâche mécano non trouvée" });
+    // Vérifier si l'utilisateur est un mécanicien
+    const user = await User.findById(id);
+    if (!user || user.role !== "mechanic") {
+      return res.status(403).json({ error: "Accès refusé, rôle invalide." });
     }
 
-    console.log("Tâche trouvée :", tacheMecano);
+    // Récupérer les tâches mécano liées à ce mécanicien
+    const tachesMecano = await TacheMecano.find({ user: id })
+      .populate({
+        path: "appointment",
+        populate: [
+          { path: "prestation" }, // Peuple la prestation
+          { path: "user" }, // Peuple le client
+          { path: "auto" }, // Peuple l'auto liée au rendez-vous
+        ],
+      })
+      .populate("user"); // Peuple les infos du mécanicien
 
-    if (!tacheMecano.appointment) {
+    if (!tachesMecano || tachesMecano.length === 0) {
       return res
-        .status(400)
-        .json({ error: "Aucun appointment lié à cette tâche" });
+        .status(404)
+        .json({ error: "Aucune tâche trouvée pour ce mécanicien." });
     }
 
-    console.log("ID de l'appointment lié :", tacheMecano.appointment);
-
-    // Mettre à jour la tâche mécano
-    const updatedTacheMecano = await TacheMecano.findByIdAndUpdate(
-      id,
-      { statut },
-      { new: true, runValidators: true }
-    );
-
-    // Mettre à jour l'appointment avec le bon champ (status au lieu de statut)
-    const updatedAppointment = await Appointment.findByIdAndUpdate(
-      tacheMecano.appointment,
-      { status: statut }, // Met à jour le champ `status` de `Appointment`
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedAppointment) {
-      return res.status(404).json({ error: "Appointment non trouvé" });
-    }
-
-    console.log("Appointment après mise à jour :", updatedAppointment);
-
-
-
-    if (statut === "Terminé") {
-      const prestationPrix = Number(updatedAppointment.prestation.prix);
-      console.log(
-        "Structure de updatedAppointment.prestation :",
-        updatedAppointment.prestation
-      );
-
-      //const prestationPrix = updatedAppointment.prestation.prix; // Récupérer le prix de la prestation
-      const clientId = updatedAppointment.user._id; // Récupérer l'ID du client
-
-      // Vérification si `prestationPrix` est un nombre valide
-      console.log("Prix de la prestation récupéré :", prestationPrix);
-      if (isNaN(prestationPrix) || prestationPrix <= 0) {
-        return res
-          .status(400)
-          .json({ error: "Prix de la prestation invalide" });
-      }
-
-      // Récupérer le portefeuille du client
-      const wallet = await Wallet.findOne({ user: clientId });
-
-      if (!wallet) {
-        return res
-          .status(404)
-          .json({ error: "Portefeuille du client non trouvé" });
-      }
-
-      // Vérifier si le client a assez d'argent
-      console.log("Portefeuille avant mise à jour :", wallet);
-      if (wallet.money < prestationPrix) {
-        return res.status(400).json({ error: "Fonds insuffisants" });
-      }
-
-      // Déduire le montant de la prestation du portefeuille du client
-      wallet.money -= prestationPrix;
-
-      // Vérifier que le montant du portefeuille est un nombre valide
-      if (isNaN(wallet.money) || wallet.money < 0) {
-        return res
-          .status(400)
-          .json({ error: "Erreur lors de la mise à jour du portefeuille" });
-      }
-      await wallet.save(); // Sauvegarder la mise à jour du portefeuille
-      console.log("Portefeuille mis à jour :", wallet);
-    }
-
-    res.status(200).json({
-      message: "Statut mis à jour avec succès",
-      tacheMecano: updatedTacheMecano,
-      appointment: updatedAppointment,
-    });
+    res.status(200).json(tachesMecano);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour :", error);
-    res.status(400).json({ error: error.message });
+    console.error("Erreur lors de la récupération des tâches :", error);
+    res.status(500).json({ error: "Une erreur interne est survenue." });
   }
-};*/
+};
 
+/*Fonction getAllDetails */
 exports.getAllDetails = async (req, res) => {
   try {
     const data = await TacheMecano.find()
@@ -215,6 +132,116 @@ exports.getAllDetails = async (req, res) => {
     res.status(500).json({ error: "Une erreur s'est produite." });
   }
 };
+/**Fonction getFacture qui liste tous les facture des client */
+exports.getFacture = async (req, res) => {
+  try {
+    const data = await TacheMecano.find()
+      .populate({
+        path: "appointment",
+        populate: [
+          { path: "auto" }, // Peuple la voiture
+          { path: "prestation" }, // Peuple la prestation
+          { path: "user" }, // Peuple l'utilisateur
+        ],
+      })
+      .populate("user"); // Popule aussi l'utilisateur lié à `TacheMecano`
+
+    // Vérifier si des tâches existent
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "Aucune facture trouvée." });
+    }
+
+    // Récupérer les IDs des utilisateurs pour chercher leurs portefeuilles
+    const userIds = data
+      .map((tache) => tache.appointment?.user?._id)
+      .filter(Boolean);
+
+    // Récupérer les portefeuilles des utilisateurs trouvés
+    const wallets = await Wallet.find({ user: { $in: userIds } });
+
+    // Associer chaque portefeuille au bon utilisateur
+    const walletMap = wallets.reduce((acc, wallet) => {
+      acc[wallet.user.toString()] = wallet;
+      return acc;
+    }, {});
+
+    // Ajouter les portefeuilles aux données finales
+    const result = data.map((tache) => ({
+      ...tache.toObject(),
+      appointment: {
+        ...tache.appointment.toObject(),
+        portefeuille:
+          walletMap[tache.appointment?.user?._id.toString()] || null,
+      },
+    }));
+
+    console.log("✅ Factures récupérées :", JSON.stringify(result, null, 2));
+    return res.json(result);
+  } catch (error) {
+    console.error("❌ Erreur lors de la récupération des factures :", error);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération des factures." });
+  }
+};
+/**Fonction getFactureClient qui retourne la facture du client présent */
+exports.getFactureClient = async (req, res) => {
+  try {
+    const { id } = req.params; // ID du client
+
+    // Vérifier si l'utilisateur est bien un client
+    const user = await User.findById(id);
+    if (!user || user.role !== "client") {
+      return res.status(403).json({ error: "Accès refusé, rôle invalide." });
+    }
+
+    // Récupérer les tâches mécano liées à ce client via l'appointment
+    const tachesMecano = await TacheMecano.find()
+      .populate({
+        path: "appointment",
+        match: { user: id }, // Filtre pour ne récupérer que les rendez-vous du client
+        populate: [
+          { path: "auto" }, // Peuple la voiture
+          { path: "prestation" }, // Peuple la prestation
+          { path: "user" }, // Peuple les infos du client
+        ],
+      })
+      .populate("user"); // Peuple les infos du mécanicien lié à `TacheMecano`
+
+    // Filtrer pour ne garder que les tâches où `appointment` n'est pas null
+    const factures = tachesMecano.filter((tache) => tache.appointment);
+
+    if (!factures || factures.length === 0) {
+      return res.status(404).json({ error: "Aucune facture trouvée." });
+    }
+
+    // Récupérer le portefeuille du client
+    const wallet = await Wallet.findOne({ user: id });
+
+    // Ajouter le portefeuille aux données finales
+    const result = factures.map((tache) => ({
+      ...tache.toObject(),
+      appointment: {
+        ...tache.appointment.toObject(),
+        portefeuille: wallet || null, // Ajoute le portefeuille s'il existe
+      },
+    }));
+
+    console.log(
+      "✅ Factures du client récupérées :",
+      JSON.stringify(result, null, 2)
+    );
+    return res.json(result);
+  } catch (error) {
+    console.error(
+      " Erreur lors de la récupération des factures client :",
+      error
+    );
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération des factures." });
+  }
+};
 
 exports.createTacheMecano = async (req, res) => {
   try {
@@ -229,18 +256,6 @@ exports.createTacheMecano = async (req, res) => {
 exports.getAllTacheMecano = async (req, res) => {
   try {
     const tacheMecano = await TacheMecano.find();
-    res.status(200).send(tacheMecano);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
-
-exports.getTacheMecanoById = async (req, res) => {
-  try {
-    const tacheMecano = await TacheMecano.findById(req.params.id);
-    if (!tacheMecano) {
-      return res.status(404).send();
-    }
     res.status(200).send(tacheMecano);
   } catch (error) {
     res.status(500).send(error);

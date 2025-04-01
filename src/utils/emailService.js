@@ -28,4 +28,5 @@ exports.sendActivationEmail = async (email, activationToken) => {
  *     console.log("✅ Appointment après mise à jour :", updatedAppointment);
        console.log("💳 Portefeuille avant mise à jour :", wallet);
        console.error("❌ Erreur lors de la mise à jour :", error);
+       console.log("💰 Prix de la prestation)
  */

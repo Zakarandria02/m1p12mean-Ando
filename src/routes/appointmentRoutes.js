@@ -4,10 +4,12 @@ const appointmentController = require("../controller/appointmentController");
 const router = express.Router();
 
 router.post("/", appointmentController.createAppointment);
-/*router.get("/", appointmentController.getAllPieces);
-router.get("/:id", appointmentController.getPiecesById);
-router.put("/:id", appointmentController.updatePieces);
-router.delete("/:id", appointmentController.deletePieces);*/
+router.get("/admin", appointmentController.getAllReservation);
+router.get("/mecaniciens", appointmentController.getAllMecano);
+router.put("/:id/assign", appointmentController.getTacheMecano);
+router.get("/:id/taches", appointmentController.getTachebyIdmecano);
+router.get("/:id/client", appointmentController.getReservationbyClient);
+// router.delete("/:id", appointmentController.deletePieces);getTachebyIdmecano
 
 module.exports = router;
 

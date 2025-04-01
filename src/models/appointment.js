@@ -6,6 +6,11 @@ const appointmentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  mecanicienId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   auto: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Auto",
@@ -28,7 +33,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["En Attente", "En Cours", "Terminé"],
+    enum: ["En Attente", "Attribué", "En Cours", "Terminé"],
     default: "En Attente",
   },
 });
