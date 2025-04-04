@@ -8,71 +8,128 @@ exports.updateStatut = async (req, res) => {
     const { statut } = req.body;
     const { id } = req.params;
 
-    // Mettre à jour le statut de l'appointment
-    const updatedAppointment = await Appointment.findByIdAndUpdate(
-      id,
-      { status: statut }, // Correction du champ `status`
-      { new: true, runValidators: true }
-    )
-      .populate("prestation")
-      .populate("user");
-
-    if (!updatedAppointment) {
+    // Vérifier si l'appointment existe
+    const currentAppointment = await Appointment.findById(id);
+    if (!currentAppointment) {
       return res.status(404).json({ error: "Rendez-vous non trouvé." });
     }
 
-    /********* CONDITION DE PAIEMENT *************/
-
-    if (statut === "En Cours") {
-      if (
-        !updatedAppointment.prestation ||
-        !updatedAppointment.prestation.prix
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Prix de la prestation introuvable." });
+    // Vérifier la transition de statut
+    if (currentAppointment.status === "En Attente" && statut === "En Cours") {
+      if (currentAppointment.paiement === "Impayé") {
+        return res.status(400).json({
+          error:
+            "Impossible de passer le rendez-vous en 'En Cours' tant que le paiement est 'Impayé'.",
+        });
       }
-
-      const prestationPrix = Number(updatedAppointment.prestation.prix);
-      const clientId = updatedAppointment.user._id; // Récupérer l'ID du client
-
-      console.log("💰 Prix de la prestation :", prestationPrix);
-
-      if (isNaN(prestationPrix) || prestationPrix <= 0) {
-        return res
-          .status(400)
-          .json({ error: "Prix de la prestation invalide." });
-      }
-
-      // Récupérer le portefeuille du client
-      const wallet = await Wallet.findOne({ user: clientId });
-
-      if (!wallet) {
-        return res
-          .status(404)
-          .json({ error: "Portefeuille du client non trouvé." });
-      }
-
-      // Vérifier si le client a assez d'argent
-      if (wallet.money < prestationPrix) {
-        return res.status(400).json({ error: "Fonds insuffisants." });
-      }
-
-      // Déduire le montant de la prestation du portefeuille du client
-      wallet.money -= prestationPrix;
-
-      await wallet.save(); // Sauvegarder la mise à jour du portefeuille
-      console.log(" Portefeuille mis à jour :", wallet);
     }
 
+    // Mettre à jour uniquement le statut, en ignorant le champ 'date'
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      { $set: { status: statut } },
+      { new: true, fields: { date: 0 } } // Exclut le champ 'date'
+    );
+
     res.status(200).json({
+      message: "Statut du rendez-vous mis à jour avec succès.",
       appointment: updatedAppointment,
     });
   } catch (error) {
-    console.error(" Erreur lors de la mise à jour :", error);
+    console.error("Erreur lors de la mise à jour :", error);
     res.status(500).json({ error: "Une erreur interne est survenue." });
   }
 };
+
+// exports.updateStatut = async (req, res) => {
+//   try {
+//     const { statut } = req.body;
+//     const { id } = req.params;
+
+//     // Récupérer l'appointment actuel
+//     const currentAppointment = await Appointment.findById(id);
+//     if (!currentAppointment) {
+//       return res.status(404).json({ error: "Rendez-vous non trouvé." });
+//     }
+
+//     // Vérifier si le statut actuel est "En Attente" et le paiement est "Impayé"
+//     if (currentAppointment.status === "En Attente" && statut === "En Cours") {
+//       if (currentAppointment.paiement === "Impayé") {
+//         return res.status(400).json({
+//           error:
+//             "Impossible de passer le rendez-vous en 'En Cours' tant que le paiement est 'Impayé'.",
+//         });
+//       }
+//     }
+
+//     // Mettre à jour le statut de l'appointment
+//     currentAppointment.status = statut;
+//     //currentAppointment.$ignore("date");
+//     await currentAppointment.save();
+
+//     res.status(200).json({
+//       message: "Statut du rendez-vous mis à jour avec succès.",
+//       appointment: currentAppointment,
+//     });
+//   } catch (error) {
+//     console.error("Erreur lors de la mise à jour :", error);
+//     res.status(500).json({ error: "Une erreur interne est survenue." });
+//   }
+// };
+
+// exports.updateStatut = async (req, res) => {
+//   try {
+//     const { statut } = req.body;
+//     const { id } = req.params;
+
+//     // Récupérer l'appointment actuel
+//     const currentAppointment = await Appointment.findById(id);
+//     if (!currentAppointment) {
+//       return res.status(404).json({ error: "Rendez-vous non trouvé." });
+//     }
+
+//     // Vérifier si le statut actuel est "En Attente"
+//     // if (currentAppointment.status !== "En Attente") {
+//     //   return res
+//     //     .status(400)
+//     //     .json({
+//     //       error:
+//     //         "Le statut de ce rendez-vous ne peut être modifié que s'il est actuellement 'En Attente'.",
+//     //     });
+//     // }
+
+//     // Si le nouveau statut est "En Cours", vérifier le statut du paiement
+//     if (statut === "En Cours") {
+//       // Récupérer le paiement associé à l'appointment
+//       const payement = await Payement.findOne({ appointment: id });
+//       if (!payement) {
+//         return res
+//           .status(404)
+//           .json({ error: "Paiement associé au rendez-vous non trouvé." });
+//       }
+
+//       // Vérifier si le statut du paiement est "Impayé"
+//       if (payement.statut === "Impayé") {
+//         return res.status(400).json({
+//           error:
+//             "Impossible de passer le rendez-vous en 'En Cours' tant que le paiement est 'Impayé'.",
+//         });
+//       }
+//     }
+
+//     // Mettre à jour le statut de l'appointment
+//     currentAppointment.status = statut;
+//     await currentAppointment.save();
+
+//     res.status(200).json({
+//       message: "Statut du rendez-vous mis à jour avec succès.",
+//       appointment: currentAppointment,
+//     });
+//   } catch (error) {
+//     console.error("Erreur lors de la mise à jour :", error);
+//     res.status(500).json({ error: "Une erreur interne est survenue." });
+//   }
+// };
 
 /*Fonction getTacheMecanoById prend les liste des taches mecano par id mecanicien */
 

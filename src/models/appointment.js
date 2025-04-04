@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
+const User = require("./user");
 
 const appointmentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
+    validate: {
+      validator: async function (userId) {
+        const user = await User.findById(userId);
+        return user && user.role === "client";
+      },
+      message: "Désolé, Client Introuvable.",
+    },
   },
   mecanicienId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,11 +24,20 @@ const appointmentSchema = new mongoose.Schema({
     ref: "Auto",
     required: true,
   },
-  prestation: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Prestation",
-    required: true,
-  },
+  prestations: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Prestation",
+      required: true,
+    },
+  ],
+  piece: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Piece",
+      default: null,
+    },
+  ],
   date: {
     type: Date,
     required: true,
@@ -36,7 +53,17 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["En Attente", "Attribué", "En Cours", "Terminé"],
     default: "En Attente",
   },
+  paiement: {
+    type: String,
+    enum: ["Impayé", "Payé"],
+    default: "Impayé",
+  },
 });
+
+// Validation : au moins une prestation obligatoire
+appointmentSchema.path("prestations").validate(function (value) {
+  return value.length > 0;
+}, "Au moins une prestation est requise pour un rendez-vous.");
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 module.exports = Appointment;

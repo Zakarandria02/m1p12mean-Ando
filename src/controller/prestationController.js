@@ -1,4 +1,8 @@
+const User = require("../models/user");
+const Auto = require("../models/auto");
 const Prestation = require("../models/prestation");
+const Appointment = require("../models/appointment");
+const Wallet = require("../models/portefeuille");
 
 // ✅ Ajouter une prestation (Admin seulement)
 exports.createPrestation = async (req, res) => {
@@ -41,7 +45,6 @@ exports.getPrestationById = async (req, res) => {
   }
 };
 
-// ✅ Modifier une prestation (Admin seulement)
 exports.updatePrestation = async (req, res) => {
   try {
     const { nom, description, prix } = req.body;
@@ -51,16 +54,40 @@ exports.updatePrestation = async (req, res) => {
       return res.status(404).json({ message: "Prestation introuvable." });
     }
 
+    // Mise à jour des détails de la prestation
     prestation.nom = nom || prestation.nom;
     prestation.description = description || prestation.description;
     prestation.prix = prix || prestation.prix;
 
+    // Sauvegarde de la prestation mise à jour
     await prestation.save();
+
     res.json({ success: true, prestation });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// ✅ Modifier une prestation (Admin seulement)
+// exports.updatePrestation = async (req, res) => {
+//   try {
+//     const { nom, description, prix } = req.body;
+//     const prestation = await Prestation.findById(req.params.id);
+
+//     if (!prestation) {
+//       return res.status(404).json({ message: "Prestation introuvable." });
+//     }
+
+//     prestation.nom = nom || prestation.nom;
+//     prestation.description = description || prestation.description;
+//     prestation.prix = prix || prestation.prix;
+
+//     await prestation.save();
+//     res.json({ success: true, prestation });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 // ✅ Supprimer une prestation (Admin seulement)
 exports.deletePrestation = async (req, res) => {

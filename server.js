@@ -15,7 +15,6 @@ const prestationRoutes = require("./src/routes/prestationRoutes");
 const appointmentRoutes = require("./src/routes/appointmentRoutes");
 const tacheMecanoRoutes = require("./src/routes/tacheMecanoRoutes");
 const portefeuilleRoutes = require("./src/routes/portefeuilleRoutes");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -34,7 +33,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/autos", autoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", piecesRoutes);
-app.use("/api/pieceClient", pieceClientRoutes);
 app.use("/api/prestations", prestationRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/tacheMecano", tacheMecanoRoutes);
